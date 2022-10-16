@@ -1,20 +1,42 @@
+import errno
 import os
-from typing import List
+from pathlib import Path
+import shutil
+from typing import Dict, List
+from localdb.base_unit import BaseUnit
 from localdb.table import Table
 
-class Database:
-	db_name: str
-	path: str
-	tables: List[Table]
+from localdb.errors import (
+	TableAlreadyExists,
+	TableDoesNotExist,
+)
 
-	def __init__(self, db_name: str, path: str):
-		self.db_name = db_name
+class Database(BaseUnit):
+	path: str
+	dbName: str
+
+	def __init__(self, path: str, dbName: str):
 		self.path = path
-		self.tables = List[Table]()
-	
-	def create_table(self, table: Table):
-		pass
-	
-	def delete_table(self, table: Table):
-		pass
+		self.dbName = dbName
+
+	def getTable(self, tableName: str):
+		return Table(self.path, self.dbName, tableName)
+
+	def createTable(self, tableName: str):
+		try:
+			os.mkdir(os.path.join(self.path, self.dbName, tableName))
+		except OSError as e:
+			if e.errno == errno.EEXIST:
+				raise TableAlreadyExists(tableName)
+			else:
+				raise
+
+	def removeTable(self, tableName: str):
+		try:
+			shutil.rmtree(os.path.join(self.path, self.dbName, tableName))
+		except OSError as e:
+			if e.errno == errno.ENOENT: # if the table doesn't exist
+				raise TableDoesNotExist(tableName)
+			else:
+				raise
 

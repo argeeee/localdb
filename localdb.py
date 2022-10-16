@@ -2,28 +2,44 @@
 LocalDB library 
 
 """
+import errno
+import imp
 import os
 import shutil
 
 from localdb.database import Database
-from localdb.utils import create_folder_if_not_exist
+from localdb.errors import (
+	DatabaseAlreadyExists,
+	DatabaseDoesNotExist,
+)
+
 
 class LocalDB:
-	db_folder: str
+	dbFolder: str
 
-	def __init__(self, db_folder: str):
-		self.db_folder = db_folder
-		create_folder_if_not_exist(self.db_folder)
+	def __init__(self, dbFolder: str):
+		self.dbFolder = dbFolder
+		if not os.path.exists(dbFolder):
+			os.makedirs(dbFolder)
 
-	def load_db(self, database_name: str) -> Database:
-		path = os.path.join(self.db_folder, database_name)
-		return Database(database_name, path)
-	
-	def create_db(self, database_name: str):
-		path = os.path.join(self.db_folder, database_name)
-		create_folder_if_not_exist(path)
+	def getDatabase(self, dbName: str):
+		return Database(self.dbFolder, dbName)
 
-	def delete_db(self, database_name: str) -> Database:
-		path = os.path.join(self.db_folder, database_name)
-		shutil.rmtree(path)
+	def createDatabase(self, dbName: str):
+		try:
+			os.mkdir(os.path.join(self.dbFolder, dbName))
+		except OSError as e:
+			if e.errno == errno.EEXIST:
+				raise DatabaseAlreadyExists(dbName)
+			else:
+				raise
+
+	def removeDatabase(self, dbName: str):
+		try:
+			shutil.rmtree(os.path.join(self.dbFolder, dbName))
+		except OSError as e:
+			if e.errno == errno.ENOENT: # if the table doesn't exist
+				raise DatabaseDoesNotExist(dbName)
+			else:
+				raise
 	
