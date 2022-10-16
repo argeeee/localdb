@@ -3,7 +3,6 @@ LocalDB library
 
 """
 import errno
-import imp
 import os
 import shutil
 
