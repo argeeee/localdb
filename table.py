@@ -1,4 +1,5 @@
 
+from typing import Any
 from localdb.condition import Condition
 
 
@@ -8,4 +9,13 @@ class Table:
 		pass
 
 	def select(self, condition: Condition):
+		pass
+
+	def insert(self, element: Any):
+		pass
+	
+	def update(self, condition: Condition):
+		pass
+
+	def delete(self, condition: Condition):
 		pass
